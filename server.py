@@ -8,6 +8,8 @@ import runpod
 import base64
 import signal
 
+print("==== Server starting ====")
+
 from inference_util import AnimateDiff, check_data_format
 
 animatediff = AnimateDiff()

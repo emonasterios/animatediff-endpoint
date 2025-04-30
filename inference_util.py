@@ -14,6 +14,7 @@ from omegaconf import OmegaConf
 
 from animatediff.utils.util import init_pipeline, reload_motion_module, load_base_model, apply_lora, apply_motion_lora
 
+print("==== Initializing AnimateDiff ====")
 
 def save_video(frames: torch.Tensor, seed=""):
     # save seed to the fil e name, for reproducibility
