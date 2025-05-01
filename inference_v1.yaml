@@ -1,3 +1,4 @@
+pretrained_model_path: "runwayml/stable-diffusion-v1-5"
 
 Model:
   unet_additional_kwargs:
@@ -30,7 +31,7 @@ Model:
 Person:
   width: 512
   height: 768
-  base_model: "majicmixRealistic_v5Preview.safetensors"
+  base_model: "runwayml/stable-diffusion-v1-5"
   base_loras:
     lora1:
     - "example_add_detail.safetensors"
@@ -44,7 +45,7 @@ Person:
 Default:
   width: 768
   height: 512
-  base_model: "realisticVisionV51_v20Novae.safetensors"
+  base_model: "runwayml/stable-diffusion-v1-5"
   base_loras:
     lora1:
     - "example_add_detail.safetensors"
