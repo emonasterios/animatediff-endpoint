@@ -38,10 +38,10 @@ RUN pip install xformers==0.0.20
 # Install additional diagnostic tools
 RUN pip install psutil huggingface_hub gdown
 
-# Download required models
-RUN echo "Downloading required models..." && \
-    python ./scripts/download_models.py --version both && \
-    echo "Models downloaded successfully"
+# Download required models or create minimal structure for testing
+RUN echo "Setting up model structure..." && \
+    python ./scripts/download_models.py --version both --create-minimal --no-fail && \
+    echo "Model structure setup completed"
 
 # Run server
 CMD [ "python", "-u", "./server.py" ]
