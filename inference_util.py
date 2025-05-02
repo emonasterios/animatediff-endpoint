@@ -1,9 +1,4 @@
 import os
-
-# set CUDA_MODULE_LOADING=LAZY to speed up the serverless function
-os.environ["CUDA_MODULE_LOADING"] = "LAZY"
-# set SAFETENSORS_FAST_GPU=1 to speed up the serverless function
-os.environ["SAFETENSORS_FAST_GPU"] = "1"
 import time
 import torch
 import imageio
@@ -11,6 +6,16 @@ import tempfile
 import numpy as np
 from einops import rearrange
 from omegaconf import OmegaConf
+
+# Check if CUDA is available
+if torch.cuda.is_available():
+    # set CUDA_MODULE_LOADING=LAZY to speed up the serverless function
+    os.environ["CUDA_MODULE_LOADING"] = "LAZY"
+    # set SAFETENSORS_FAST_GPU=1 to speed up the serverless function
+    os.environ["SAFETENSORS_FAST_GPU"] = "1"
+    print("CUDA is available. Using GPU for inference.")
+else:
+    print("CUDA is not available. Using CPU for inference (this will be slow).")
 
 from animatediff.utils.util import init_pipeline, reload_motion_module, load_base_model, apply_lora, apply_motion_lora
 
@@ -110,9 +115,17 @@ class AnimateDiff:
 
         # can not be changed
         self.video_length = 16
-        self.use_fp16     = True
-        self.dtype        = torch.float16 if self.use_fp16 else torch.float32
-        self.device       = "cuda"  # only support gpu
+        
+        # Check if CUDA is available and set device accordingly
+        if torch.cuda.is_available():
+            self.device = "cuda"
+            self.use_fp16 = True
+            self.dtype = torch.float16 if self.use_fp16 else torch.float32
+        else:
+            self.device = "cpu"
+            self.use_fp16 = False
+            self.dtype = torch.float32
+            print("WARNING: Running on CPU. This will be very slow and may not work well.")
 
         self.pipeline = init_pipeline(pretrained_model_path, self.inference_config, self.device, self.dtype)
 

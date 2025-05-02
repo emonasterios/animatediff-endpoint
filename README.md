@@ -111,12 +111,24 @@ python test_client.py
 ##### Showcase: Call from a Telegram bot
 ![Example Result](./assets/telegram_bot_example.jpg)
 
-## 4. TODO
+## 4. Testing
+The project includes unit tests to ensure the functionality of the code. The tests are located in the `tests` directory.
+
+To run the tests, navigate to the `tests` directory and run:
+
+```bash
+python -m unittest test_check_data_format.py
+```
+
+See the [tests/README.md](./tests/README.md) file for more information about the tests.
+
+## 5. TODO
 - [x] Support for specific base model for different objectives. (Person and Scene)
 - [x] Support for LoRA models. (Edit yaml file and place your model in "./models/DreamBooth_LoRA")
 - [x] Support for Motion LoRA models. (Also editable in yaml file, see [here](https://github.com/guoyww/AnimateDiff#features) for details and downloads.)
+- [x] Add unit tests for input validation
 - [ ] More detailed instructions
 - [ ] One-click deploy (If anyone is interested...)
 
-## 4. Acknowledgement
+## 6. Acknowledgement
 Thanks to [AnimateDiff](https://animatediff.github.io/) and [RunPod](https://www.runpod.io/).

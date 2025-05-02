@@ -118,10 +118,14 @@ def init_pipeline(pretrained_model_path, inference_config, device, dtype):
         torch_dtype=dtype,
     )
 
-    if is_xformers_available():
-        unet.enable_xformers_memory_efficient_attention()
+    # Make xformers optional when running on CPU
+    if device != "cpu":
+        if is_xformers_available():
+            unet.enable_xformers_memory_efficient_attention()
+        else:
+            print("WARNING: xformers is not available. Performance may be degraded.")
     else:
-        assert False, "xformers is not available"
+        print("Running on CPU. xformers will not be used.")
 
     pipeline = AnimationPipeline(
         vae=vae,
