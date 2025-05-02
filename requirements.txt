@@ -1,12 +1,13 @@
+torch>=2.0.0
 runpod==1.5.3
 imageio[ffmpeg]==2.31.1
 imageio-ffmpeg==0.4.9
 omegaconf==2.3.0
 safetensors==0.3.2
 einops==0.6.1
-transformers==4.51.3
+# Actualizar a versiones más compatibles
+transformers==4.35.2
 accelerate==0.20.3
-xformers==0.0.20
-diffusers==0.33.1
+diffusers==0.25.0
 huggingface-hub==0.19.4
 gdown

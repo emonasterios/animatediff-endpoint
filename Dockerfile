@@ -25,6 +25,8 @@ ADD server.py ./
 # pip install
 ADD requirements.txt ./
 RUN pip install -r requirements.txt
+# Install xformers for GPU acceleration
+RUN pip install xformers==0.0.20
 
 # Run server
 CMD [ "python", "-u", "./server.py" ]
