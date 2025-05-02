@@ -271,7 +271,26 @@ def main():
         
         # Create subdirectories
         for subdir in ["vae", "unet", "text_encoder", "tokenizer", "scheduler"]:
-            os.makedirs(os.path.join(sd_dir, subdir), exist_ok=True)
+            subdir_path = os.path.join(sd_dir, subdir)
+            os.makedirs(subdir_path, exist_ok=True)
+            
+            # Create placeholder files in each directory
+            if subdir == "text_encoder":
+                with open(os.path.join(subdir_path, "pytorch_model.bin"), "wb") as f:
+                    f.write(b"placeholder")
+            elif subdir == "vae":
+                with open(os.path.join(subdir_path, "diffusion_pytorch_model.bin"), "wb") as f:
+                    f.write(b"placeholder")
+            elif subdir == "unet":
+                with open(os.path.join(subdir_path, "diffusion_pytorch_model.bin"), "wb") as f:
+                    f.write(b"placeholder")
+            elif subdir == "tokenizer":
+                with open(os.path.join(subdir_path, "vocab.json"), "w") as f:
+                    f.write("{}")
+                with open(os.path.join(subdir_path, "merges.txt"), "w") as f:
+                    f.write("")
+                    
+        logger.info("Created minimal model structure with placeholder files")
     
     # Download Stable Diffusion model if not skipped
     sd_success = True
