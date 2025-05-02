@@ -102,39 +102,75 @@ If you encounter issues with the RunPod worker exiting with code 1, you can use 
 
 The following diagnostic scripts are available:
 
-1. **Environment Check**: Checks the system environment and dependencies
+1. **Model Loading Check**: Checks if model files exist and can be loaded correctly
    ```bash
-   ./scripts/check_environment.py
+   python scripts/check_model_loading.py
    ```
 
-2. **Test Inference**: Runs a simple test inference to verify the model works
+2. **Test RunPod Endpoint**: Tests the RunPod endpoint with a simple request
    ```bash
-   ./scripts/test_inference.py
+   python scripts/test_runpod.py --endpoint-id YOUR_ENDPOINT_ID --api-key YOUR_API_KEY
+   # Or using the shell script
+   ./scripts/test_runpod.sh YOUR_ENDPOINT_ID YOUR_API_KEY "A cat walking"
    ```
 
-3. **RunPod Worker Check**: Checks the RunPod worker status and logs
+3. **Download Models**: Downloads the required model files
    ```bash
-   ./scripts/check_runpod_worker.py
-   ```
-
-4. **Run All Diagnostics**: Runs all diagnostic checks and saves the output to a file
-   ```bash
-   ./scripts/run_all_diagnostics.py
+   python scripts/download_models.py
+   # With options
+   python scripts/download_models.py --version v1  # Only v1 motion module
+   python scripts/download_models.py --version v2  # Only v2 motion module
+   python scripts/download_models.py --example-lora  # Include example LoRA
+   python scripts/download_models.py --create-minimal  # Create minimal placeholder files
    ```
 
 ### Common Issues
 
-1. **Out of memory**: The model requires a significant amount of GPU memory. Try reducing the image dimensions or using a smaller model.
+1. **Worker exited with exit code 1**: This is typically caused by missing model files. The most common issue is that the Stable Diffusion v1.5 model files are missing in the `/workspace/models/StableDiffusion/stable-diffusion-v1-5` directory. Make sure the following files exist:
+   - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/text_encoder/pytorch_model.bin`
+   - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/vae/diffusion_pytorch_model.bin`
+   - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/unet/diffusion_pytorch_model.bin`
+   - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/tokenizer/vocab.json`
 
-2. **Missing model files**: Ensure that all required model files are available in the correct directories.
+2. **Out of memory**: The model requires a significant amount of GPU memory. Try reducing the image dimensions or using a smaller model.
 
-3. **CUDA issues**: Verify that CUDA is available and working correctly.
+3. **Missing model files**: Ensure that all required model files are available in the correct directories. The updated Dockerfile creates a minimal directory structure, but you still need to download the actual model files.
 
-4. **Dependency issues**: Check that all required dependencies are installed with the correct versions.
+4. **CUDA issues**: Verify that CUDA is available and working correctly. The server logs will show CUDA availability at startup.
 
-5. **Disk space**: Ensure there's enough disk space for temporary files and model outputs.
+5. **Dependency issues**: Check that all required dependencies are installed with the correct versions. The Dockerfile includes all necessary dependencies.
 
-For more detailed troubleshooting information, see the [scripts/README.md](scripts/README.md) file.
+6. **Disk space**: Ensure there's enough disk space for temporary files and model outputs. The server logs will show disk usage at startup if psutil is installed.
+
+7. **Debugging with enhanced logging**: The updated code includes enhanced logging to help diagnose issues. Check the worker logs in the RunPod dashboard for detailed error messages.
+
+### Fixing the "Worker exited with exit code 1" Issue
+
+If you're experiencing the "worker exited with exit code 1" issue, follow these steps:
+
+1. **Check model files**: Make sure all required model files are present. You can use the `check_model_loading.py` script to verify:
+   ```bash
+   python scripts/check_model_loading.py
+   ```
+
+2. **Download missing models**: If model files are missing, download them using the provided script:
+   ```bash
+   python scripts/download_models.py
+   ```
+
+3. **Rebuild Docker image**: After downloading the models, rebuild your Docker image:
+   ```bash
+   bash scripts/build.sh
+   ```
+
+4. **Deploy to RunPod**: Deploy the updated image to RunPod and create a new endpoint.
+
+5. **Test the endpoint**: Use the provided test script to verify the endpoint works:
+   ```bash
+   python scripts/test_runpod.py --endpoint-id YOUR_ENDPOINT_ID --api-key YOUR_API_KEY
+   ```
+
+For more detailed troubleshooting information, check the worker logs in the RunPod dashboard.
 
 <a id="Usage"></a>
 ## 4. Usage
