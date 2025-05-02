@@ -8,7 +8,6 @@ einops==0.6.1
 # Actualizar a versiones más compatibles
 transformers==4.35.2
 accelerate==0.20.3
-# xformers es opcional y solo se requiere para GPU
 diffusers==0.25.0
 huggingface-hub==0.19.4
 gdown
