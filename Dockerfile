@@ -36,7 +36,12 @@ RUN pip install -r requirements.txt
 # Install xformers for GPU acceleration
 RUN pip install xformers==0.0.20
 # Install additional diagnostic tools
-RUN pip install psutil
+RUN pip install psutil huggingface_hub gdown
+
+# Download required models
+RUN echo "Downloading required models..." && \
+    python ./scripts/download_models.py --version both && \
+    echo "Models downloaded successfully"
 
 # Run server
 CMD [ "python", "-u", "./server.py" ]
