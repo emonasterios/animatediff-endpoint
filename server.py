@@ -135,7 +135,7 @@ def text2video(job):
             inference_start = time.time()
             logger.info(f"Job {job_id}: Starting inference...")
             
-            save_path = animatediff.inference(
+            result = animatediff.inference(
                 prompt         = job_input["prompt"],
                 steps          = job_input["steps"],
                 width          = job_input["width"],
@@ -148,6 +148,20 @@ def text2video(job):
                 motion_lora    = job_input["motion_lora"],
             )
             
+            # Check if there was an error during inference
+            if "error" in result:
+                logger.error(f"Job {job_id}: Inference returned an error: {result['error']}")
+                if "details" in result:
+                    logger.error(f"Job {job_id}: Error details: {result['details']}")
+                if "traceback" in result:
+                    logger.error(f"Job {job_id}: Error traceback: {result['traceback']}")
+                return {
+                    "error": result["error"],
+                    "details": result.get("details", "No additional details provided"),
+                    "job_id": job_id
+                }
+            
+            save_path = result["output_path"]
             inference_time = time.time() - inference_start
             logger.info(f"Job {job_id}: Inference completed in {inference_time:.2f} seconds. Video saved to: {save_path}")
             
@@ -214,6 +228,49 @@ def start_server():
 # Start the server
 if __name__ == "__main__":
     try:
+        # Check for model files before starting the server
+        model_dir = "/workspace/models/StableDiffusion/stable-diffusion-v1-5"
+        required_files = [
+            os.path.join(model_dir, "text_encoder", "pytorch_model.bin"),
+            os.path.join(model_dir, "vae", "diffusion_pytorch_model.bin"),
+            os.path.join(model_dir, "unet", "diffusion_pytorch_model.bin"),
+            os.path.join(model_dir, "tokenizer", "vocab.json")
+        ]
+        
+        missing_files = []
+        for file_path in required_files:
+            if not os.path.exists(file_path):
+                missing_files.append(file_path)
+        
+        if missing_files:
+            logger.warning("=== MISSING MODEL FILES DETECTED ===")
+            logger.warning("The following required model files are missing:")
+            for file in missing_files:
+                logger.warning(f"  - {file}")
+            logger.warning("The server will start, but inference requests will fail.")
+            logger.warning("Please download the required model files before using this endpoint.")
+            logger.warning("You can download the models using the scripts/download_models.py script.")
+            logger.warning("=== END WARNING ===")
+        else:
+            logger.info("All required model files found. Server ready for inference.")
+        
+        # Check for system diagnostics
+        try:
+            import psutil
+            process = psutil.Process()
+            memory_info = process.memory_info()
+            logger.info(f"System memory usage - RSS: {memory_info.rss / 1024**2:.2f} MB, VMS: {memory_info.vms / 1024**2:.2f} MB")
+            
+            # Log CPU usage
+            cpu_percent = psutil.cpu_percent(interval=0.1)
+            logger.info(f"CPU usage: {cpu_percent}%")
+            
+            # Log disk usage
+            disk_usage = psutil.disk_usage('/')
+            logger.info(f"Disk usage - total: {disk_usage.total / 1024**3:.2f} GB, used: {disk_usage.used / 1024**3:.2f} GB, free: {disk_usage.free / 1024**3:.2f} GB")
+        except ImportError:
+            logger.warning("psutil not available for system diagnostics")
+        
         start_server()
     except Exception as e:
         logger.error(f"Fatal error in main process: {e}")
