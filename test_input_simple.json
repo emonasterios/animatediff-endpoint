@@ -1,5 +1,11 @@
 {
-    "input": {
-        "prompt": "1girl, focus on face, offshoulder, light smile, shiny skin, best quality, masterpiece, photorealistic"
-    }
+  "input": {
+    "prompt": "a beautiful landscape with mountains and a lake, best quality, masterpiece",
+    "steps": 20,
+    "width": 512,
+    "height": 512,
+    "n_prompt": "low quality, bad anatomy, worst quality, low resolution",
+    "guidance_scale": 7.5,
+    "seed": 42
+  }
 }

@@ -94,8 +94,50 @@ python scripts/download_models.py --example-lora
 
 Alternatively, you can download the motion module files manually from the [AnimateDiff repository](https://github.com/guoyww/AnimateDiff#features).
 
+## 3. Troubleshooting
+
+If you encounter issues with the RunPod worker exiting with code 1, you can use the diagnostic scripts included in the `scripts` directory to help identify the problem.
+
+### Diagnostic Scripts
+
+The following diagnostic scripts are available:
+
+1. **Environment Check**: Checks the system environment and dependencies
+   ```bash
+   ./scripts/check_environment.py
+   ```
+
+2. **Test Inference**: Runs a simple test inference to verify the model works
+   ```bash
+   ./scripts/test_inference.py
+   ```
+
+3. **RunPod Worker Check**: Checks the RunPod worker status and logs
+   ```bash
+   ./scripts/check_runpod_worker.py
+   ```
+
+4. **Run All Diagnostics**: Runs all diagnostic checks and saves the output to a file
+   ```bash
+   ./scripts/run_all_diagnostics.py
+   ```
+
+### Common Issues
+
+1. **Out of memory**: The model requires a significant amount of GPU memory. Try reducing the image dimensions or using a smaller model.
+
+2. **Missing model files**: Ensure that all required model files are available in the correct directories.
+
+3. **CUDA issues**: Verify that CUDA is available and working correctly.
+
+4. **Dependency issues**: Check that all required dependencies are installed with the correct versions.
+
+5. **Disk space**: Ensure there's enough disk space for temporary files and model outputs.
+
+For more detailed troubleshooting information, see the [scripts/README.md](scripts/README.md) file.
+
 <a id="Usage"></a>
-## 3. Usage
+## 4. Usage
 #### 1. Test on Local Machine
 ```bash
 # Install dependencies
