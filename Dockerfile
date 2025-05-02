@@ -38,9 +38,12 @@ RUN pip install xformers==0.0.20
 # Install additional diagnostic tools
 RUN pip install psutil huggingface_hub gdown
 
-# Download required models or create minimal structure for testing
+# Create minimal model structure for testing without downloading
 RUN echo "Setting up model structure..." && \
-    python ./scripts/download_models.py --version both --create-minimal --no-fail && \
+    python ./scripts/download_models.py --skip-sd --create-minimal --no-fail && \
+    mkdir -p /workspace/models/Motion_Module && \
+    touch /workspace/models/Motion_Module/mm_sd_v15_v1-fp16.safetensors && \
+    touch /workspace/models/Motion_Module/mm_sd_v15_v2-fp16.safetensors && \
     echo "Model structure setup completed"
 
 # Run server
