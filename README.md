@@ -186,13 +186,30 @@ bash scripts/build.sh
 
 If your RunPod worker shows as "unhealthy" or exits with code 1, check the following:
 
-1. **Missing Motion Module Files**: Make sure you've included the motion module files in your Docker image. These files should be in the `models/Motion_Module` directory.
+1. **Missing Model Files**: The most common cause of "worker exited with exit code 1" is missing model files. Make sure you've included:
+   - The Stable Diffusion v1.5 model in `models/StableDiffusion/stable-diffusion-v1-5`
+   - The motion module files in `models/Motion_Module` directory (mm_sd_v15_v1-fp16.safetensors and/or mm_sd_v15_v2-fp16.safetensors)
 
-2. **CUDA Compatibility**: Ensure that the CUDA version in your Docker image is compatible with the GPU on RunPod.
+2. **Testing the Endpoint**: Use the provided test scripts to verify your endpoint:
+   ```bash
+   # Using Python script
+   python test_runpod.py --endpoint-id YOUR_ENDPOINT_ID --api-key YOUR_API_KEY
+   
+   # Using shell script
+   ./test_runpod.sh YOUR_ENDPOINT_ID YOUR_API_KEY
+   ```
 
-3. **Memory Issues**: If the worker is running out of memory, try using a GPU with more VRAM or reduce the model size/batch size.
+3. **Automatic Model Download**: The updated Dockerfile now includes automatic model download during build. Make sure you're using the latest version of the Dockerfile.
 
-4. **Logs**: Check the worker logs in the RunPod dashboard for specific error messages.
+4. **CUDA Compatibility**: Ensure that the CUDA version in your Docker image is compatible with the GPU on RunPod.
+
+5. **Memory Issues**: If the worker is running out of memory, try using a GPU with more VRAM or reduce the model size/batch size.
+
+6. **Logs**: Check the worker logs in the RunPod dashboard for specific error messages. The updated code includes more detailed logging to help diagnose issues.
+
+7. **Manual Model Download**: If automatic download fails, you can manually download the models:
+   - Stable Diffusion v1.5: Download from [HuggingFace](https://huggingface.co/runwayml/stable-diffusion-v1-5)
+   - Motion Modules: Download from [AnimateDiff repository](https://github.com/guoyww/AnimateDiff#features)
 
 Feel free to contact me if you encounter any problems after checking these common issues.
 
