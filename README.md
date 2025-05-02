@@ -56,23 +56,57 @@ The time is measured from the moment the input prompt is sent to the moment the 
 - Python >= 3.9
 - Docker
 - Local GPU is necessary for testing but not necessary for deployment. (Recommended: RTX 3090)
+- Required model files (see below)
 
 If you don't have a GPU, you can modify and test the code on [Google Colab](https://colab.research.google.com/) and then build and deploy the application on RunPod.
 
 Example Notebook: [link](https://colab.research.google.com/drive/1Gd6uuiItbIFjVPFNyJQhEEEL9khdAyY7?usp=sharing)
 
+### Required Model Files
+
+Before running the application, you need to download the following model files:
+
+1. **Motion Module**: Download the motion module files and place them in the `models/Motion_Module` directory:
+   - For v1: `mm_sd_v15_v1-fp16.safetensors`
+   - For v2: `mm_sd_v15_v2-fp16.safetensors`
+
+2. **Base Models**: The application uses Stable Diffusion v1.5 by default, which will be downloaded automatically from HuggingFace if not present.
+
+3. **LoRA Models**: If you want to use LoRA models, place them in the `models/DreamBooth_LoRA` directory.
+
+#### Automatic Download
+
+You can use the provided script to download the required model files automatically:
+
+```bash
+# Download both v1 and v2 motion modules
+python scripts/download_models.py
+
+# Download only v1 motion module
+python scripts/download_models.py --version v1
+
+# Download only v2 motion module
+python scripts/download_models.py --version v2
+
+# Download motion modules and example LoRA
+python scripts/download_models.py --example-lora
+```
+
+Alternatively, you can download the motion module files manually from the [AnimateDiff repository](https://github.com/guoyww/AnimateDiff#features).
+
 <a id="Usage"></a>
 ## 3. Usage
 #### 1. Test on Local Machine
-```
+```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Download models
-python scripts/download.py
+# Download required models
+python scripts/download_models.py
 
 # Edit (or not) config to customize your inference, e.g., change base model, lora model, motion lora model, etc.
-rename inference_v2(example).yaml to inference_v2.yaml
+# If inference_v2.yaml doesn't exist, copy inference_v2(example).yaml to inference_v2.yaml
+cp inference_v2.yaml inference_v2.yaml
 
 # Run inference test
 python inference_util.py
@@ -81,8 +115,14 @@ python inference_util.py
 python server.py
 ```
 
-During downloading, if you encounter errors like "gdown.exceptions.FileURLRetrievalError: Cannot retrieve the public link of the file.", 
-reinstalling the gdown package using "pip install --upgrade --no-cache-dir gdown" and rerunning the download.py may help.
+**Troubleshooting Downloads**:
+- If you encounter errors like "gdown.exceptions.FileURLRetrievalError: Cannot retrieve the public link of the file.", try reinstalling gdown:
+  ```bash
+  pip install --upgrade --no-cache-dir gdown
+  ```
+  Then run the download script again.
+
+- If the download script fails, you can manually download the files from the [AnimateDiff repository](https://github.com/guoyww/AnimateDiff#features) and place them in the appropriate directories.
 
 
 #### 2. Deploy on RunPod
@@ -90,16 +130,29 @@ reinstalling the gdown package using "pip install --upgrade --no-cache-dir gdown
 
 2. Then, decide a name for your Docker image, e.g., "your_username/anidiff:v1" and set your image name in "./scripts/build.sh".
 
-3. Run the following commands to build and push your Docker image to DockerHub.
+3. **Important**: Before building the Docker image, make sure you have downloaded the required model files as described in the "Required Model Files" section above. The Docker build process will include these files in the image.
 
+4. Run the following commands to build and push your Docker image to DockerHub:
+
+```bash
 bash scripts/build.sh
+```
 
+5. Finally, deploy your application on RunPod to create [Template](https://docs.runpod.io/docs/template-creation) and [Endpoint](https://docs.runpod.io/docs/autoscaling).
 
-4. Finally, deploy your application on RunPod to create [Template](https://docs.runpod.io/docs/template-creation) and [Endpoint](https://docs.runpod.io/docs/autoscaling).
+### Troubleshooting RunPod Deployment
 
-Sorry for not providing detailed instructions here as the author is quite busy recently. You can find many detailed instructions on Google about how to deploy a Docker image on RunPod.
+If your RunPod worker shows as "unhealthy" or exits with code 1, check the following:
 
-Feel free to contact me if you encounter any problems after searching on Google.
+1. **Missing Motion Module Files**: Make sure you've included the motion module files in your Docker image. These files should be in the `models/Motion_Module` directory.
+
+2. **CUDA Compatibility**: Ensure that the CUDA version in your Docker image is compatible with the GPU on RunPod.
+
+3. **Memory Issues**: If the worker is running out of memory, try using a GPU with more VRAM or reduce the model size/batch size.
+
+4. **Logs**: Check the worker logs in the RunPod dashboard for specific error messages.
+
+Feel free to contact me if you encounter any problems after checking these common issues.
 
 #### 3. Call the Application
 ##### Call from a Python script
