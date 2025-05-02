@@ -96,81 +96,104 @@ Alternatively, you can download the motion module files manually from the [Anima
 
 ## 3. Troubleshooting
 
-If you encounter issues with the RunPod worker exiting with code 1, you can use the diagnostic scripts included in the `scripts` directory to help identify the problem.
+Si encuentras problemas con el worker de RunPod que sale con código 1, puedes usar los scripts de diagnóstico incluidos en el directorio `scripts` para ayudar a identificar el problema.
 
-### Diagnostic Scripts
+### Scripts de Diagnóstico
 
-The following diagnostic scripts are available:
+Los siguientes scripts de diagnóstico están disponibles:
 
-1. **Model Loading Check**: Checks if model files exist and can be loaded correctly
+1. **Verificación de Carga de Modelos**: Comprueba si los archivos de modelo existen y pueden cargarse correctamente
    ```bash
    python scripts/check_model_loading.py
    ```
 
-2. **Test RunPod Endpoint**: Tests the RunPod endpoint with a simple request
+2. **Prueba del Endpoint de RunPod**: Prueba el endpoint de RunPod con una solicitud simple
    ```bash
-   python scripts/test_runpod.py --endpoint-id YOUR_ENDPOINT_ID --api-key YOUR_API_KEY
-   # Or using the shell script
-   ./scripts/test_runpod.sh YOUR_ENDPOINT_ID YOUR_API_KEY "A cat walking"
+   python scripts/test_runpod.py --endpoint-id TU_ENDPOINT_ID --api-key TU_API_KEY
+   # O usando el script de shell
+   ./scripts/test_runpod.sh TU_ENDPOINT_ID TU_API_KEY "Un gato caminando"
    ```
 
-3. **Download Models**: Downloads the required model files
+3. **Prueba Local sin RunPod**: Prueba el servidor localmente sin necesidad de RunPod
+   ```bash
+   python test_local.py
+   ```
+
+4. **Descargar Modelos**: Descarga los archivos de modelo necesarios
    ```bash
    python scripts/download_models.py
-   # With options
-   python scripts/download_models.py --version v1  # Only v1 motion module
-   python scripts/download_models.py --version v2  # Only v2 motion module
-   python scripts/download_models.py --example-lora  # Include example LoRA
-   python scripts/download_models.py --create-minimal  # Create minimal placeholder files
+   # Con opciones
+   python scripts/download_models.py --version v1  # Solo módulo de movimiento v1
+   python scripts/download_models.py --version v2  # Solo módulo de movimiento v2
+   python scripts/download_models.py --example-lora  # Incluir LoRA de ejemplo
+   python scripts/download_models.py --create-minimal  # Crear archivos de marcador de posición mínimos
    ```
 
-### Common Issues
+### Problemas Comunes
 
-1. **Worker exited with exit code 1**: This is typically caused by missing model files. The most common issue is that the Stable Diffusion v1.5 model files are missing in the `/workspace/models/StableDiffusion/stable-diffusion-v1-5` directory. Make sure the following files exist:
+1. **Worker salió con código de salida 1**: Esto generalmente es causado por archivos de modelo faltantes. El problema más común es que los archivos del modelo Stable Diffusion v1.5 faltan en el directorio `/workspace/models/StableDiffusion/stable-diffusion-v1-5`. Asegúrate de que existan los siguientes archivos:
    - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/text_encoder/pytorch_model.bin`
    - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/vae/diffusion_pytorch_model.bin`
    - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/unet/diffusion_pytorch_model.bin`
    - `/workspace/models/StableDiffusion/stable-diffusion-v1-5/tokenizer/vocab.json`
 
-2. **Out of memory**: The model requires a significant amount of GPU memory. Try reducing the image dimensions or using a smaller model.
+2. **Memoria insuficiente**: El modelo requiere una cantidad significativa de memoria GPU. Intenta reducir las dimensiones de la imagen o usar un modelo más pequeño.
 
-3. **Missing model files**: Ensure that all required model files are available in the correct directories. The updated Dockerfile creates a minimal directory structure, but you still need to download the actual model files.
+3. **Archivos de modelo faltantes**: Asegúrate de que todos los archivos de modelo requeridos estén disponibles en los directorios correctos. El Dockerfile actualizado crea una estructura de directorios mínima, pero aún necesitas descargar los archivos de modelo reales.
 
-4. **CUDA issues**: Verify that CUDA is available and working correctly. The server logs will show CUDA availability at startup.
+4. **Problemas de CUDA**: Verifica que CUDA esté disponible y funcionando correctamente. Los registros del servidor mostrarán la disponibilidad de CUDA al inicio.
 
-5. **Dependency issues**: Check that all required dependencies are installed with the correct versions. The Dockerfile includes all necessary dependencies.
+5. **Problemas de dependencias**: Verifica que todas las dependencias requeridas estén instaladas con las versiones correctas. El Dockerfile incluye todas las dependencias necesarias.
 
-6. **Disk space**: Ensure there's enough disk space for temporary files and model outputs. The server logs will show disk usage at startup if psutil is installed.
+6. **Espacio en disco**: Asegúrate de que haya suficiente espacio en disco para archivos temporales y salidas de modelo. Los registros del servidor mostrarán el uso del disco al inicio si psutil está instalado.
 
-7. **Debugging with enhanced logging**: The updated code includes enhanced logging to help diagnose issues. Check the worker logs in the RunPod dashboard for detailed error messages.
+7. **Depuración con registro mejorado**: El código actualizado incluye registro mejorado para ayudar a diagnosticar problemas. Verifica los registros del worker en el panel de RunPod para mensajes de error detallados.
 
-### Fixing the "Worker exited with exit code 1" Issue
+### Solución del Problema "Worker salió con código de salida 1"
 
-If you're experiencing the "worker exited with exit code 1" issue, follow these steps:
+Si estás experimentando el problema "worker salió con código de salida 1", sigue estos pasos:
 
-1. **Check model files**: Make sure all required model files are present. You can use the `check_model_loading.py` script to verify:
+1. **Verificar archivos de modelo**: Asegúrate de que todos los archivos de modelo requeridos estén presentes. Puedes usar el script `check_model_loading.py` para verificar:
    ```bash
    python scripts/check_model_loading.py
    ```
 
-2. **Download missing models**: If model files are missing, download them using the provided script:
+2. **Descargar modelos faltantes**: Si faltan archivos de modelo, descárgalos usando el script proporcionado:
    ```bash
    python scripts/download_models.py
    ```
 
-3. **Rebuild Docker image**: After downloading the models, rebuild your Docker image:
+3. **Reconstruir imagen Docker**: Después de descargar los modelos, reconstruye tu imagen Docker:
    ```bash
    bash scripts/build.sh
    ```
 
-4. **Deploy to RunPod**: Deploy the updated image to RunPod and create a new endpoint.
+4. **Implementar en RunPod**: Implementa la imagen actualizada en RunPod y crea un nuevo endpoint.
 
-5. **Test the endpoint**: Use the provided test script to verify the endpoint works:
+5. **Probar el endpoint**: Usa el script de prueba proporcionado para verificar que el endpoint funcione:
    ```bash
-   python scripts/test_runpod.py --endpoint-id YOUR_ENDPOINT_ID --api-key YOUR_API_KEY
+   python scripts/test_runpod.py --endpoint-id TU_ENDPOINT_ID --api-key TU_API_KEY
    ```
 
-For more detailed troubleshooting information, check the worker logs in the RunPod dashboard.
+Para información de solución de problemas más detallada, verifica los registros del worker en el panel de RunPod.
+
+### Mejoras Implementadas para Solucionar el Problema
+
+Hemos realizado las siguientes mejoras para solucionar el problema "worker salió con código de salida 1":
+
+1. **Manejo de errores mejorado**: El código ahora maneja correctamente los errores cuando faltan archivos de modelo y proporciona mensajes de error claros.
+
+2. **Estructura de modelos mínima**: El Dockerfile crea automáticamente una estructura de directorios mínima para los modelos, lo que permite que el worker se inicie correctamente incluso sin los archivos de modelo reales.
+
+3. **Verificación de archivos de modelo**: El servidor ahora verifica la existencia de archivos de modelo críticos al inicio y proporciona advertencias claras si faltan.
+
+4. **Registro detallado**: Se ha mejorado el registro para proporcionar información más detallada sobre lo que está sucediendo durante la inicialización y la inferencia.
+
+5. **Scripts de diagnóstico**: Se han añadido scripts de diagnóstico para ayudar a identificar y solucionar problemas comunes.
+
+6. **Manejo gracioso de errores**: El servidor ahora maneja los errores de manera más elegante y proporciona respuestas de error útiles en lugar de simplemente fallar.
+
+7. **Prueba local**: Se ha añadido un script de prueba local para verificar el servidor sin necesidad de RunPod.
 
 <a id="Usage"></a>
 ## 4. Usage
