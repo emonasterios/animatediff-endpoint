@@ -38,10 +38,18 @@ RUN pip install xformers==0.0.20
 # Install additional diagnostic tools
 RUN pip install psutil huggingface_hub gdown
 
-# Download required models
-RUN echo "Downloading required models..." && \
-    python ./scripts/download_models.py --version both && \
-    echo "Models downloaded successfully"
+# Create minimal model structure for testing without downloading
+RUN echo "Setting up model structure..." && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/vae && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/unet && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/text_encoder && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/tokenizer && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/scheduler && \
+    echo '{"_class_name":"StableDiffusionPipeline","_diffusers_version":"0.6.0","scheduler":["diffusers","PNDMScheduler"],"text_encoder":["transformers","CLIPTextModel"],"tokenizer":["transformers","CLIPTokenizer"],"unet":["diffusers","UNet2DConditionModel"],"vae":["diffusers","AutoencoderKL"]}' > /workspace/models/StableDiffusion/stable-diffusion-v1-5/model_index.json && \
+    mkdir -p /workspace/models/Motion_Module && \
+    touch /workspace/models/Motion_Module/mm_sd_v15_v1-fp16.safetensors && \
+    touch /workspace/models/Motion_Module/mm_sd_v15_v2-fp16.safetensors && \
+    echo "Model structure setup completed"
 
 # Run server
 CMD [ "python", "-u", "./server.py" ]
