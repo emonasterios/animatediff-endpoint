@@ -74,20 +74,39 @@ Before running the application, you need to download the following model files:
 
 3. **LoRA Models**: If you want to use LoRA models, place them in the `models/DreamBooth_LoRA` directory.
 
-You can download the motion module files from the [AnimateDiff repository](https://github.com/guoyww/AnimateDiff#features).
+#### Automatic Download
+
+You can use the provided script to download the required model files automatically:
+
+```bash
+# Download both v1 and v2 motion modules
+python scripts/download_models.py
+
+# Download only v1 motion module
+python scripts/download_models.py --version v1
+
+# Download only v2 motion module
+python scripts/download_models.py --version v2
+
+# Download motion modules and example LoRA
+python scripts/download_models.py --example-lora
+```
+
+Alternatively, you can download the motion module files manually from the [AnimateDiff repository](https://github.com/guoyww/AnimateDiff#features).
 
 <a id="Usage"></a>
 ## 3. Usage
 #### 1. Test on Local Machine
-```
+```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Download models
-python scripts/download.py
+# Download required models
+python scripts/download_models.py
 
 # Edit (or not) config to customize your inference, e.g., change base model, lora model, motion lora model, etc.
-rename inference_v2(example).yaml to inference_v2.yaml
+# If inference_v2.yaml doesn't exist, copy inference_v2(example).yaml to inference_v2.yaml
+cp inference_v2.yaml inference_v2.yaml
 
 # Run inference test
 python inference_util.py
@@ -96,8 +115,14 @@ python inference_util.py
 python server.py
 ```
 
-During downloading, if you encounter errors like "gdown.exceptions.FileURLRetrievalError: Cannot retrieve the public link of the file.", 
-reinstalling the gdown package using "pip install --upgrade --no-cache-dir gdown" and rerunning the download.py may help.
+**Troubleshooting Downloads**:
+- If you encounter errors like "gdown.exceptions.FileURLRetrievalError: Cannot retrieve the public link of the file.", try reinstalling gdown:
+  ```bash
+  pip install --upgrade --no-cache-dir gdown
+  ```
+  Then run the download script again.
+
+- If the download script fails, you can manually download the files from the [AnimateDiff repository](https://github.com/guoyww/AnimateDiff#features) and place them in the appropriate directories.
 
 
 #### 2. Deploy on RunPod
