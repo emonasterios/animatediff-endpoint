@@ -40,7 +40,12 @@ RUN pip install psutil huggingface_hub gdown
 
 # Create minimal model structure for testing without downloading
 RUN echo "Setting up model structure..." && \
-    python ./scripts/download_models.py --skip-sd --create-minimal --no-fail && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/vae && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/unet && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/text_encoder && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/tokenizer && \
+    mkdir -p /workspace/models/StableDiffusion/stable-diffusion-v1-5/scheduler && \
+    echo '{"_class_name":"StableDiffusionPipeline","_diffusers_version":"0.6.0","scheduler":["diffusers","PNDMScheduler"],"text_encoder":["transformers","CLIPTextModel"],"tokenizer":["transformers","CLIPTokenizer"],"unet":["diffusers","UNet2DConditionModel"],"vae":["diffusers","AutoencoderKL"]}' > /workspace/models/StableDiffusion/stable-diffusion-v1-5/model_index.json && \
     mkdir -p /workspace/models/Motion_Module && \
     touch /workspace/models/Motion_Module/mm_sd_v15_v1-fp16.safetensors && \
     touch /workspace/models/Motion_Module/mm_sd_v15_v2-fp16.safetensors && \
