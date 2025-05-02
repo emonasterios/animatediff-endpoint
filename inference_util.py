@@ -113,6 +113,16 @@ class AnimateDiff:
         self.inference_config = OmegaConf.load(os.path.join(os.path.dirname(__file__), "inference_{}.yaml".format(self.version)))
         self.model_dir        = os.path.join(os.path.dirname(__file__), "models/DreamBooth_LoRA")
 
+        # Check if required model files exist
+        if not os.path.exists(pretrained_model_path):
+            print(f"WARNING: Pretrained model path {pretrained_model_path} does not exist.")
+            print("Will attempt to download from HuggingFace.")
+        
+        if not os.path.exists(self.motion_module):
+            print(f"WARNING: Motion module {self.motion_module} does not exist.")
+            print("You need to download the motion module and place it in the models/Motion_Module directory.")
+            print("The model will still initialize but inference will fail without the motion module.")
+
         # can not be changed
         self.video_length = 16
         
@@ -121,13 +131,19 @@ class AnimateDiff:
             self.device = "cuda"
             self.use_fp16 = True
             self.dtype = torch.float16 if self.use_fp16 else torch.float32
+            print(f"Using device: {self.device} with dtype: {self.dtype}")
         else:
             self.device = "cpu"
             self.use_fp16 = False
             self.dtype = torch.float32
             print("WARNING: Running on CPU. This will be very slow and may not work well.")
 
-        self.pipeline = init_pipeline(pretrained_model_path, self.inference_config, self.device, self.dtype)
+        try:
+            self.pipeline = init_pipeline(pretrained_model_path, self.inference_config, self.device, self.dtype)
+            print("Pipeline initialized successfully.")
+        except Exception as e:
+            print(f"Error initializing pipeline: {e}")
+            raise
 
         # pre-defined default params, can be changed
         self.steps          = 25
@@ -137,7 +153,17 @@ class AnimateDiff:
     def _reload_motion_module(self):
         # somehow the motion module needs to be reloaded every time if the motion lora was applied, otherwise the result could be wrong
         # reloading the motion module only takes 0.2s, so I think it's fine to reload it every time instead of checking if last time the motion lora was applied
-        self.pipeline = reload_motion_module(self.pipeline, self.motion_module, self.device)
+        if not os.path.exists(self.motion_module):
+            print(f"ERROR: Motion module {self.motion_module} does not exist.")
+            print("You need to download the motion module and place it in the models/Motion_Module directory.")
+            raise FileNotFoundError(f"Motion module file not found: {self.motion_module}")
+        
+        try:
+            self.pipeline = reload_motion_module(self.pipeline, self.motion_module, self.device)
+            print("Motion module reloaded successfully.")
+        except Exception as e:
+            print(f"Error reloading motion module: {e}")
+            raise
 
     def _get_model_params(self, prompt, width, height, n_prompt, base_model, base_loras, motion_lora):
         prompt = prompt[:-1] if prompt[-1] == "." else prompt
@@ -171,27 +197,62 @@ class AnimateDiff:
     def _update_model(self, base_model, base_loras, motion_lora):
         # update model
         if base_model and base_model != "":
-            self._reload_motion_module()
-            self.pipeline = load_base_model(self.pipeline, self.model_dir, base_model, self.device, self.dtype)
-            # make sure the model is on the right device and dtype
-            self.pipeline.to(self.device, self.dtype)
+            try:
+                # First check if the base model exists
+                base_model_path = os.path.join(self.model_dir, base_model)
+                if not os.path.exists(base_model_path) and not base_model.startswith("runwayml/"):
+                    print(f"WARNING: Base model {base_model_path} does not exist.")
+                    print("Will attempt to use default model from HuggingFace instead.")
+                    base_model = "runwayml/stable-diffusion-v1-5"
+                
+                # Reload motion module
+                self._reload_motion_module()
+                
+                # Load base model
+                self.pipeline = load_base_model(self.pipeline, self.model_dir, base_model, self.device, self.dtype)
+                
+                # Make sure the model is on the right device and dtype
+                self.pipeline.to(self.device, self.dtype)
+                print(f"Base model loaded successfully: {base_model}")
 
-            # apply lora
-            if base_loras:
-                if len(base_loras) != 0:
-                    for lora in base_loras:
-                        if len(base_loras[lora]) != 2:
-                            raise ValueError('base_loras must be {"lora_name": [filename, scale], "lora_name2": [filename2, scale2] ...}')
-                    self.pipeline = apply_lora(self.pipeline, self.model_dir, base_loras, device=self.device, dtype=self.dtype)
+                # Apply lora
+                if base_loras:
+                    if len(base_loras) != 0:
+                        valid_loras = {}
+                        for lora in base_loras:
+                            if len(base_loras[lora]) != 2:
+                                print(f"WARNING: Skipping lora {lora} - format must be [filename, scale]")
+                                continue
+                                
+                            lora_path = os.path.join(self.model_dir, base_loras[lora][0])
+                            if not os.path.exists(lora_path):
+                                print(f"WARNING: LoRA file {lora_path} does not exist. Skipping.")
+                                continue
+                                
+                            valid_loras[lora] = base_loras[lora]
+                            
+                        if valid_loras:
+                            self.pipeline = apply_lora(self.pipeline, self.model_dir, valid_loras, device=self.device, dtype=self.dtype)
+                            print(f"Applied {len(valid_loras)} LoRA models successfully.")
+                        else:
+                            print("No valid LoRA models found to apply.")
 
-            # apply motion lora
-            if motion_lora:
-                if self.version == "v1":
-                    raise ValueError("motion_lora is not supported in v1")
-                if len(motion_lora) == 2:
-                    self.pipeline = apply_motion_lora(self.pipeline, self.model_dir, motion_lora, device=self.device, dtype=self.dtype)
-                else:
-                    raise ValueError("motion_lora must be [filename, scale]")
+                # Apply motion lora
+                if motion_lora:
+                    if self.version == "v1":
+                        print("WARNING: motion_lora is not supported in v1. Skipping.")
+                    elif len(motion_lora) == 2:
+                        motion_lora_path = os.path.join(self.model_dir, motion_lora[0])
+                        if not os.path.exists(motion_lora_path):
+                            print(f"WARNING: Motion LoRA file {motion_lora_path} does not exist. Skipping.")
+                        else:
+                            self.pipeline = apply_motion_lora(self.pipeline, self.model_dir, motion_lora, device=self.device, dtype=self.dtype)
+                            print(f"Applied motion LoRA successfully: {motion_lora[0]}")
+                    else:
+                        print("WARNING: motion_lora must be [filename, scale]. Skipping.")
+            except Exception as e:
+                print(f"Error updating model: {e}")
+                raise
         else:
             raise ValueError("base model must be specified")
 
@@ -211,33 +272,51 @@ class AnimateDiff:
         # only prompt is required
         # optional params for inference: steps, guidance_scale, width, height, seed, n_prompt
         # optional params for model: base_model, base_loras, motion_lora
+        try:
+            print(f"Starting inference with prompt: {prompt}")
+            
+            prompt, width, height, n_prompt, base_model, base_loras, motion_lora = self._get_model_params(
+                prompt, width, height, n_prompt, base_model, base_loras, motion_lora
+            )
+            
+            print(f"Model parameters prepared. Using base model: {base_model}")
+            self._update_model(base_model, base_loras, motion_lora)
 
-        prompt, width, height, n_prompt, base_model, base_loras, motion_lora = self._get_model_params(
-            prompt, width, height, n_prompt, base_model, base_loras, motion_lora
-        )
-        self._update_model(base_model, base_loras, motion_lora)
+            # inference
+            seed = seed if seed is not None else torch.randint(0, 1000000000, (1,)).item()
+            torch.manual_seed(seed)
 
-        # inference
-        seed = seed if seed is not None else torch.randint(0, 1000000000, (1,)).item()
-        torch.manual_seed(seed)
-
-        print(f"current seed: {torch.initial_seed()}")
-        print(f"sampling {prompt} ...")
-        print(f"negative prompt: {n_prompt}")
-        steps = self.steps if steps is None else steps
-        with torch.no_grad():
-            sample = self.pipeline(
-                prompt              = prompt,
-                negative_prompt     = n_prompt,
-                num_inference_steps = steps,
-                guidance_scale      = self.guidance_scale if guidance_scale is None else guidance_scale,
-                width               = width,
-                height              = height,
-                video_length        = self.video_length,
-            ).videos
-
-            save_path = save_video(sample, seed=seed)
-        return save_path
+            print(f"Current seed: {torch.initial_seed()}")
+            print(f"Sampling with prompt: {prompt}")
+            print(f"Negative prompt: {n_prompt}")
+            print(f"Image dimensions: {width}x{height}")
+            
+            steps = self.steps if steps is None else steps
+            print(f"Using {steps} inference steps")
+            
+            with torch.no_grad():
+                print("Starting pipeline inference...")
+                sample = self.pipeline(
+                    prompt              = prompt,
+                    negative_prompt     = n_prompt,
+                    num_inference_steps = steps,
+                    guidance_scale      = self.guidance_scale if guidance_scale is None else guidance_scale,
+                    width               = width,
+                    height              = height,
+                    video_length        = self.video_length,
+                ).videos
+                
+                print("Pipeline inference completed successfully")
+                save_path = save_video(sample, seed=seed)
+                print(f"Video saved to: {save_path}")
+                
+            return save_path
+            
+        except Exception as e:
+            print(f"Error during inference: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
 
 if __name__ == "__main__":
