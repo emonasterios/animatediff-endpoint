@@ -284,22 +284,39 @@ def main():
     motion_module_dir = os.path.join(base_dir, "models", "Motion_Module")
     os.makedirs(motion_module_dir, exist_ok=True)
     
-    # Google Drive file IDs for motion modules
-    motion_module_v1_id = "1RqkQuGPaCO5sGZ6V6KZ-jUWmsRu48Kdl"  # v1
-    motion_module_v2_id = "1ql0g_Ys4UCz2RnokYlBjyOYPbttbIpbu"  # v2
-    
-    # Download motion modules
-    if args.version in ["v1", "both"]:
-        download_from_gdrive(
-            motion_module_v1_id,
-            os.path.join(motion_module_dir, "mm_sd_v15_v1-fp16.safetensors")
-        )
-    
-    if args.version in ["v2", "both"]:
-        download_from_gdrive(
-            motion_module_v2_id,
-            os.path.join(motion_module_dir, "mm_sd_v15_v2-fp16.safetensors")
-        )
+    # Skip downloading motion modules if create-minimal is set
+    if args.create_minimal:
+        logger.info("Skipping motion module downloads due to --create-minimal flag")
+        # Create placeholder files
+        mm_v1_path = os.path.join(motion_module_dir, "mm_sd_v15_v1-fp16.safetensors")
+        mm_v2_path = os.path.join(motion_module_dir, "mm_sd_v15_v2-fp16.safetensors")
+        
+        if args.version in ["v1", "both"] and (not os.path.exists(mm_v1_path) or args.force):
+            with open(mm_v1_path, "wb") as f:
+                f.write(b"placeholder")
+            logger.info(f"Created placeholder file at {mm_v1_path}")
+        
+        if args.version in ["v2", "both"] and (not os.path.exists(mm_v2_path) or args.force):
+            with open(mm_v2_path, "wb") as f:
+                f.write(b"placeholder")
+            logger.info(f"Created placeholder file at {mm_v2_path}")
+    else:
+        # Google Drive file IDs for motion modules
+        motion_module_v1_id = "1RqkQuGPaCO5sGZ6V6KZ-jUWmsRu48Kdl"  # v1
+        motion_module_v2_id = "1ql0g_Ys4UCz2RnokYlBjyOYPbttbIpbu"  # v2
+        
+        # Download motion modules
+        if args.version in ["v1", "both"]:
+            download_from_gdrive(
+                motion_module_v1_id,
+                os.path.join(motion_module_dir, "mm_sd_v15_v1-fp16.safetensors")
+            )
+        
+        if args.version in ["v2", "both"]:
+            download_from_gdrive(
+                motion_module_v2_id,
+                os.path.join(motion_module_dir, "mm_sd_v15_v2-fp16.safetensors")
+            )
     
     # Download example LoRA if requested
     if args.example_lora:
