@@ -47,7 +47,7 @@ popd > /dev/null
 
 echo "\n=== 4. Downloading Whisper GGML model ($WHISPER_MODEL) ==="
 pushd "$WHISPER_DIR" > /dev/null
-bash download-ggml-model.sh "$WHISPER_MODEL"
+bash models/download-ggml-model.sh "$WHISPER_MODEL"
 popd > /dev/null
 
 # Prepare directory for converted or downloaded Llama GGUF models
