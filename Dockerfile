@@ -57,5 +57,12 @@ snapshot_download(
 )
 EOF
 
+# Debug: list downloaded model files
+RUN echo "Listing StableDiffusion model files:" \
+ && ls -R models/StableDiffusion/stable-diffusion-v1-5 \
+ && echo "Listing Motion Module model files:" \
+ && ls -R models/Motion_Module
+
+
 # Run server
 CMD [ "python", "-u", "./server.py" ]
