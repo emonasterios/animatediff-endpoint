@@ -39,7 +39,7 @@ RUN pip install xformers==0.0.20
 RUN pip install psutil huggingface_hub gdown
 
 # Download actual models at build time
-RUN python3 - << 'EOF'
+RUN python3 - <<EOF
 from huggingface_hub import snapshot_download
 
 # 1) Stable Diffusion v1.5
