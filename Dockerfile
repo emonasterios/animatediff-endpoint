@@ -38,42 +38,9 @@ RUN pip install xformers==0.0.20
 # Install additional diagnostic tools
 RUN pip install psutil huggingface_hub gdown
 
-ARG HUGGINGFACE_TOKEN
-ENV HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
 
-# Download actual models at build time
-RUN python3 - <<EOF
-import os
-from huggingface_hub import snapshot_download
-
-token = os.getenv("HUGGINGFACE_TOKEN")
-auth_kwargs = {}
-if token:
-    auth_kwargs["use_auth_token"] = token
-
-# 1) Stable Diffusion v1.5
-snapshot_download(
-    repo_id="runwayml/stable-diffusion-v1-5",
-    local_dir="models/StableDiffusion/stable-diffusion-v1-5",
-    local_dir_use_symlinks=False,
-    **auth_kwargs
-)
-
-# 2) Motion module
-snapshot_download(
-    repo_id="openai/AnimateDiff-Motion-Module",
-    local_dir="models/Motion_Module",
-    local_dir_use_symlinks=False,
-    **auth_kwargs
-)
-EOF
-
-# Debug: list downloaded model files
-RUN echo "Listing StableDiffusion model files:" \
- && ls -R models/StableDiffusion/stable-diffusion-v1-5 \
- && echo "Listing Motion Module model files:" \
- && ls -R models/Motion_Module
-
-
-# Run server
 CMD [ "python", "-u", "./server.py" ]
+
+# Download models at container start (runtime)
+# Expects HUGGINGFACE_TOKEN env var at runtime (injected by Runpod)
+CMD ["bash","-lc","python3 ./scripts/download_models.py --token "$HUGGINGFACE_TOKEN" && python3 -u ./server.py"]
