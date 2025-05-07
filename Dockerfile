@@ -40,6 +40,10 @@ RUN pip install psutil huggingface_hub gdown
 
 
 
-# Download models at container start (runtime)
-# Expects HUGGINGFACE_TOKEN env var at runtime (injected by Runpod)
-CMD ["bash","-lc","python3 ./scripts/download_models.py --token $HUGGINGFACE_TOKEN && python3 -u ./server.py"]
+
+# Copiar entrypoint y dar permisos de ejecución
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Entrypoint: descarga modelos y arranca el servidor
+ENTRYPOINT ["/entrypoint.sh"]
