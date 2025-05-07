@@ -38,17 +38,15 @@ RUN pip install xformers==0.0.20
 # Install additional diagnostic tools
 RUN pip install psutil huggingface_hub gdown
 
-ARG HF_HUB_TOKEN
-ENV HF_HUB_TOKEN=${HF_HUB_TOKEN} \
-    HUGGINGFACE_HUB_TOKEN=${HF_HUB_TOKEN} \
-    HUGGINGFACE_TOKEN=${HF_HUB_TOKEN}
+ARG HUGGINGFACE_TOKEN
+ENV HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
 
 # Download actual models at build time
 RUN python3 - <<EOF
 import os
 from huggingface_hub import snapshot_download
 
-token = os.getenv("HF_HUB_TOKEN")
+token = os.getenv("HUGGINGFACE_TOKEN")
 auth_kwargs = {}
 if token:
     auth_kwargs["use_auth_token"] = token
