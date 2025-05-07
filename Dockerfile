@@ -39,8 +39,7 @@ RUN pip install xformers==0.0.20
 RUN pip install psutil huggingface_hub gdown
 
 
-CMD [ "python", "-u", "./server.py" ]
 
 # Download models at container start (runtime)
 # Expects HUGGINGFACE_TOKEN env var at runtime (injected by Runpod)
-CMD ["bash","-lc","python3 ./scripts/download_models.py --token "$HUGGINGFACE_TOKEN" && python3 -u ./server.py"]
+CMD ["bash","-lc","python3 ./scripts/download_models.py --token $HUGGINGFACE_TOKEN && python3 -u ./server.py"]
