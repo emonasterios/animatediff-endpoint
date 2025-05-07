@@ -38,22 +38,33 @@ RUN pip install xformers==0.0.20
 # Install additional diagnostic tools
 RUN pip install psutil huggingface_hub gdown
 
+ARG HUGGINGFACE_TOKEN
+ENV HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+
 # Download actual models at build time
 RUN python3 - <<EOF
+import os
 from huggingface_hub import snapshot_download
+
+token = os.getenv("HUGGINGFACE_TOKEN")
+auth_kwargs = {}
+if token:
+    auth_kwargs["use_auth_token"] = token
 
 # 1) Stable Diffusion v1.5
 snapshot_download(
     repo_id="runwayml/stable-diffusion-v1-5",
     local_dir="models/StableDiffusion/stable-diffusion-v1-5",
-    local_dir_use_symlinks=False
+    local_dir_use_symlinks=False,
+    **auth_kwargs
 )
 
 # 2) Motion module
 snapshot_download(
     repo_id="openai/AnimateDiff-Motion-Module",
     local_dir="models/Motion_Module",
-    local_dir_use_symlinks=False
+    local_dir_use_symlinks=False,
+    **auth_kwargs
 )
 EOF
 
